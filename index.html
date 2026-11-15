@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RendraTube — Download Video MP4 & MP3 YouTube Gratis</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between font-sans">
+
+  <main class="max-w-2xl w-full mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-rose-500 to-amber-400 bg-clip-text text-transparent">
+          RendraTube DL
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-400">Unduh Video MP4, Audio MP3 & Playlist YouTube Gratis</p>
+      </div>
+      <button onclick="shareSite()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs sm:text-sm px-3 py-2 rounded-xl flex items-center gap-1.5 transition">
+        <span>🔗</span> <span>Bagikan Web</span>
+      </button>
+    </div>
+
+    <!-- Input Box -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl">
+      <label class="block text-xs font-medium text-slate-400 mb-2">Tempel Link Video atau Playlist YouTube:</label>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <div class="relative flex-1">
+          <input
+            id="urlInput"
+            type="url"
+            placeholder="https://www.youtube.com/watch?v=... atau link playlist"
+            class="w-full bg-slate-950 border border-slate-700 focus:border-rose-500 focus:outline-none rounded-xl px-4 py-3 pr-16 text-sm text-white"
+          />
+          <button
+            type="button"
+            onclick="pasteClipboard()"
+            class="absolute right-2 top-1/2 -translate-y-1/2 bg-slate-800 hover:bg-slate-700 text-xs px-2.5 py-1.5 rounded-lg text-slate-300"
+          >
+            Paste
+          </button>
+        </div>
+        <button
+          id="fetchBtn"
+          onclick="fetchInfo()"
+          class="bg-rose-600 hover:bg-rose-500 active:scale-95 font-semibold text-sm px-5 py-3 rounded-xl transition whitespace-nowrap"
+        >
+          Proses Link
+        </button>
+      </div>
+
+      <!-- Status / Loading -->
+      <div id="statusBox" class="hidden mt-4 p-3 rounded-xl text-sm"></div>
+    </div>
+
+    <!-- Result Card -->
+    <div id="resultCard" class="hidden mt-6 bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl space-y-5">
+      <!-- Info Header -->
+      <div class="flex flex-col sm:flex-row gap-4 items-start">
+        <img id="thumbImg" src="" alt="Thumbnail" class="w-full sm:w-44 aspect-video object-cover rounded-xl bg-slate-800 hidden" />
+        <div class="flex-1 min-w-0">
+          <span id="badgeType" class="inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-400 mb-1.5">
+            VIDEO
+          </span>
+          <h2 id="mediaTitle" class="font-bold text-base sm:text-lg leading-snug break-words"></h2>
+          <p id="mediaMeta" class="text-xs text-slate-400 mt-1"></p>
+        </div>
+      </div>
+
+      <!-- Format & Quality Controls -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-800">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Pilih Format</label>
+          <select id="formatSelect" onchange="updateQualityOptions()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm">
+            <option value="mp4">🎬 Video (MP4)</option>
+            <option value="mp3">🎵 Audio (MP3)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Pilih Kualitas</label>
+          <select id="qualitySelect" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm">
+            <option value="1080">1080p (Full HD)</option>
+            <option value="720" selected>720p (HD Jernih)</option>
+            <option value="480">480p (Standar)</option>
+            <option value="360">360p (Hemat Kuota)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Single Video Download Button -->
+      <div id="singleDownloadArea">
+        <button
+          onclick="startSingleDownload()"
+          class="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] font-bold py-3.5 rounded-xl text-sm sm:text-base transition shadow-lg shadow-emerald-950/50"
+        >
+          ⬇️ Download Sekarang
+        </button>
+      </div>
+
+      <!-- Playlist Area -->
+      <div id="playlistArea" class="hidden space-y-4">
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <p class="text-sm font-semibold">Unduh Sekaligus (File ZIP)</p>
+            <p class="text-xs text-slate-400">Otomatis menggabungkan hingga 15 video pertama menjadi 1 file ZIP.</p>
+          </div>
+          <button
+            onclick="startPlaylistZipDownload()"
+            class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl whitespace-nowrap transition"
+          >
+            📦 Download Semua (.ZIP)
+          </button>
+        </div>
+
+        <div>
+          <p class="text-xs font-semibold text-slate-400 mb-2">Atau unduh satu per satu dari daftar playlist:</p>
+          <div id="playlistItems" class="max-h-80 overflow-y-auto space-y-2 pr-1"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="text-center text-xs text-slate-500 py-6 px-4">
+    Berjalan 24/7 di Cloud • Dapat dibuka dari HP & Laptop mana saja
+  </footer>
+
+  <script>
+    let currentData = null;
+
+    function showStatus(msg, type = "info") {
+      const box = document.getElementById("statusBox");
+      box.classList.remove("hidden", "bg-slate-800", "text-slate-200", "bg-rose-950/70", "text-rose-300", "bg-emerald-950/70", "text-emerald-300");
+      if (type === "error") {
+        box.classList.add("bg-rose-950/70", "text-rose-300");
+      } else if (type === "success") {
+        box.classList.add("bg-emerald-950/70", "text-emerald-300");
+      } else {
+        box.classList.add("bg-slate-800", "text-slate-200");
+      }
+      box.textContent = msg;
+    }
+
+    async function pasteClipboard() {
+      try {
+        const text = await navigator.clipboard.readText();
+        document.getElementById("urlInput").value = text;
+      } catch {
+        showStatus("Izin tempel otomatis ditolak browser. Silakan tekan lama lalu Tempel secara manual.", "error");
+      }
+    }
+
+    function updateQualityOptions() {
+      const fmt = document.getElementById("formatSelect").value;
+      const qSelect = document.getElementById("qualitySelect");
+      if (fmt === "mp3") {
+        qSelect.innerHTML = `
+          <option value="320">320 kbps (Kualitas Studio)</option>
+          <option value="192" selected>192 kbps (Jernih & Standar)</option>
+          <option value="128">128 kbps (Ukuran Kecil)</option>
+        `;
+      } else {
+        qSelect.innerHTML = `
+          <option value="1080">1080p (Full HD)</option>
+          <option value="720" selected>720p (HD Jernih)</option>
+          <option value="480">480p (Standar)</option>
+          <option value="360">360p (Hemat Kuota)</option>
+        `;
+      }
+    }
+
+    async function fetchInfo() {
+      const url = document.getElementById("urlInput").value.trim();
+      if (!url) {
+        showStatus("Masukkan link YouTube terlebih dahulu.", "error");
+        return;
+      }
+
+      const btn = document.getElementById("fetchBtn");
+      btn.disabled = true;
+      btn.textContent = "Memeriksa...";
+      document.getElementById("resultCard").classList.add("hidden");
+      showStatus("⏳ Sedang mengambil informasi video/playlist dari YouTube...");
+
+      try {
+        const res = await fetch("/api/info", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Gagal memproses link.");
+
+        currentData = data;
+        document.getElementById("statusBox").classList.add("hidden");
+        renderResult(data);
+      } catch (err) {
+        showStatus("❌ " + err.message, "error");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Proses Link";
+      }
+    }
+
+    function renderResult(data) {
+      const card = document.getElementById("resultCard");
+      const thumb = document.getElementById("thumbImg");
+      const badge = document.getElementById("badgeType");
+      const title = document.getElementById("mediaTitle");
+      const meta = document.getElementById("mediaMeta");
+      const singleArea = document.getElementById("singleDownloadArea");
+      const playlistArea = document.getElementById("playlistArea");
+
+      card.classList.remove("hidden");
+      title.textContent = data.title;
+
+      if (data.type === "playlist") {
+        badge.textContent = `PLAYLIST (${data.count} VIDEO)`;
+        meta.textContent = `Channel: ${data.uploader}`;
+        thumb.classList.add("hidden");
+        singleArea.classList.add("hidden");
+        playlistArea.classList.remove("hidden");
+
+        const listBox = document.getElementById("playlistItems");
+        listBox.innerHTML = "";
+        data.entries.forEach((item) => {
+          const row = document.createElement("div");
+          row.className = "flex items-center justify-between gap-2 bg-slate-950 border border-slate-800 p-2.5 rounded-xl";
+          row.innerHTML = `
+            <div class="min-w-0 flex-1">
+              <p class="text-xs font-medium text-slate-200 truncate">${item.index}. ${item.title}</p>
+              <p class="text-[11px] text-slate-500">${item.duration}</p>
+            </div>
+            <button
+              onclick="triggerDownload('${encodeURIComponent(item.url)}')"
+              class="bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold px-3 py-1.5 rounded-lg shrink-0"
+            >
+              Unduh
+            </button>
+          `;
+          listBox.appendChild(row);
+        });
+      } else {
+        badge.textContent = "VIDEO TUNGGAL";
+        meta.textContent = `${data.uploader} • Durasi: ${data.duration}`;
+        if (data.thumbnail) {
+          thumb.src = data.thumbnail;
+          thumb.classList.remove("hidden");
+        } else {
+          thumb.classList.add("hidden");
+        }
+        singleArea.classList.remove("hidden");
+        playlistArea.classList.add("hidden");
+      }
+    }
+
+    function triggerDownload(encodedUrl) {
+      const fmt = document.getElementById("formatSelect").value;
+      const qual = document.getElementById("qualitySelect").value;
+      showStatus("⏳ Server sedang memproses & mengonversi file. Tunggu beberapa detik hingga unduhan otomatis muncul...", "success");
+      const downloadUrl = `/api/download?url=${encodedUrl}&format=${fmt}&quality=${qual}`;
+      window.location.href = downloadUrl;
+    }
+
+    function startSingleDownload() {
+      if (!currentData) return;
+      triggerDownload(encodeURIComponent(currentData.url));
+    }
+
+    function startPlaylistZipDownload() {
+      const url = document.getElementById("urlInput").value.trim();
+      const fmt = document.getElementById("formatSelect").value;
+      const qual = document.getElementById("qualitySelect").value;
+      showStatus("⏳ Sedang mengunduh dan membungkus playlist menjadi ZIP (bisa memakan waktu 1-2 menit, jangan tutup halaman)...", "success");
+      window.location.href = `/api/download-playlist?url=${encodeURIComponent(url)}&format=${fmt}&quality=${qual}&limit=15`;
+    }
+
+    async function shareSite() {
+      const shareData = {
+        title: "RendraTube Downloader",
+        text: "Download video MP4 dan lagu MP3 YouTube gratis di sini:",
+        url: window.location.href
+      };
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        showStatus("✅ Link website berhasil disalin! Silakan bagikan ke WhatsApp/Telegram.", "success");
+      }
+    }
+  </script>
+</body>
+</html>
